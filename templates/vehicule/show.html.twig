@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vehicule{% endblock %}
+
+{% block body %}
+    <div class="container mt-5">
+        <h1 class="mb-4">{{ vehicule.marque }}</h1>
+
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th>Marque</th>
+                    <td>{{ vehicule.marque }}</td>
+                </tr>
+                {% if is_granted('ROLE_ADMIN') %}
+                <tr>
+                    <th>Immatriculation</th>
+                    <td>{{ vehicule.immatriculation }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Prix journalier</th>
+                    <td>{{ vehicule.prixJournalier }} € / j</td>
+                </tr>
+                <tr>
+                    <th>Disponibilité</th>
+                    <td>{{ vehicule.disponibilite ? '✅' : '❌' }}</td>
+                </tr>
+                <tr>
+                    <th>Moyenne des notes</th>
+                    <td>{{ moyenneNotes }}/5</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="{{ path('app_vehicule_index') }}" class="btn btn-secondary">Back to list</a>
+        {% if is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('app_vehicule_edit', {'id': vehicule.id}) }}" class="btn btn-primary">Edit</a>
+            {{ include('vehicule/_delete_form.html.twig') }}
+        {% endif %}
+
+        <h2 class="mt-4">Ajouter un commentaire</h2>
+        {{ form_start(form) }}
+            {{ form_widget(form) }}
+            <button class="btn btn-primary">{{ 'Ajouter' }}</button>
+        {{ form_end(form) }}
+
+        <h2 class="mt-4">Commentaires</h2>
+        <ul class="list-group">
+            {% for commentaire in commentaires %}
+                <li class="list-group-item">
+                    <strong>Note : {{ commentaire.note }}/5</strong><br>
+                    {{ commentaire.contenu }}<br>
+                </li>
+            {% else %}
+                <li class="list-group-item">Aucun commentaire pour le moment.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vehicule index{% endblock %}
+{% block stylesheets %}
+<style>
+.star {
+    font-size: 1.5em;
+    color: #ddd;
+}
+
+.star.checked {
+    color: #fdb813;
+}
+</style>
+ {% endblock %}
+{% block body %}
+    <div class="container mt-5">
+        <h1 class="mb-4">Liste de voitures</h1>
+
+        <form method="get" action="{{ path('app_vehicule_index') }}" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" name="marque" class="form-control" placeholder="Marque" value="{{ app.request.query.get('marque') }}">
+                </div>
+                <div class="col-md-4">
+                    <input type="number" name="prix_max" class="form-control" placeholder="Prix max" value="{{ app.request.query.get('prix_max') }}">
+                </div>
+                <div class="col-md-4">
+                    <select name="disponibilite" class="form-select">
+                        <option value="">Disponibilité</option>
+                        <option value="1" {% if app.request.query.get('disponibilite') == '1' %}selected{% endif %}>✅</option>
+                        <option value="0" {% if app.request.query.get('disponibilite') == '0' %}selected{% endif %}>❌</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Rechercher</button>
+        </form>
+
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Marque</th>
+                    <th>Immatriculation</th>
+                    <th>Prix journalier</th>
+                    <th>Disponibilité</th>
+                    <th>Moyenne des notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in vehiculesAvecNotes %}
+                <tr>
+                    <td>{{ item.vehicule.marque }}</td>
+                    <td>{{ item.vehicule.immatriculation }}</td>
+                    <td><b>{{ item.vehicule.prixJournalier }}</b> €</td>
+                    <td>{{ item.vehicule.disponibilite ? '✅' : '❌' }}</td>
+                    <td>
+                        {% for i in 1..5 %}
+                            <span class="star {% if item.moyenneNotes >= i %}checked{% endif %}">★</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% if is_granted(["ROLE_ADMIN"]) %}
+                            <a href="{{ path('app_vehicule_edit', {'id': item.vehicule.id}) }}" class="btn btn-secondary btn-sm">Edit</a>
+                        {% endif %}
+                        <a href="{{ path('app_vehicule_show', {'id': item.vehicule.id}) }}" class="btn btn-primary btn-sm">Show</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="6">Pas de voitures</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
