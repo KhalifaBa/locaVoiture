@@ -30,9 +30,9 @@ class VehiculeRepository extends ServiceEntityRepository
                 ->setParameter('prixMax', $prixMax);
         }
 
-        if ($disponibilite !== null) {
+        if ($disponibilite) {
             $queryBuilder->andWhere('v.disponibilite = :disponibilite')
-                ->setParameter('disponibilite', $disponibilite === "1");
+                ->setParameter('disponibilite', $disponibilite);
         }
 
         return $queryBuilder->getQuery()->getResult();

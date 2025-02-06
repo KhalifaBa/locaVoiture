@@ -21,11 +21,11 @@ class CommentaireType extends AbstractType
             ->add('note', ChoiceType::class, [
                 'label' => 'Note',
                 'choices' => [
-                    '1' => 1,
-                    '2' => 2,
-                    '3' => 3,
-                    '4' => 4,
-                    '5' => 5,
+                    '⭐' => 1,
+                    '⭐⭐' => 2,
+                    '⭐⭐⭐' => 3,
+                    '⭐⭐⭐⭐' => 4,
+                    '⭐⭐⭐⭐⭐' => 5,
                 ],
                 'expanded' => true,
                 'multiple' => false,

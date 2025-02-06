@@ -4,7 +4,13 @@
 
 {% block body %}
     <h1>Edit Vehicule</h1>
-
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }}">
+                 {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
     {{ include('vehicule/_form.html.twig', {'button_label': 'Update'}) }}
 
     <a href="{{ path('app_vehicule_index') }}">back to list</a>

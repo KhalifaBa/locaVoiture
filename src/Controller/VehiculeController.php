@@ -23,7 +23,6 @@ public function index(Request $request, VehiculeRepository $vehiculeRepository):
     $marque = $request->query->get('marque');
     $prixMax = $request->query->get('prix_max');
     $disponibilite = $request->query->get('disponibilite');
-
     $vehicules = $vehiculeRepository->findByFilters($marque, $prixMax, $disponibilite);
 
     // Calculer la moyenne des notes pour chaque véhicule
