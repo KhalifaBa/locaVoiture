@@ -11,8 +11,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Commentaires;
-use App\Form\CommentaireType;
-
+use App\Entity\VehiculeImage;
+use App\Form\CommentairesType;
+use App\Form\VehiculeImageType;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 
 #[Route('/vehicule')]
 final class VehiculeController extends AbstractController
@@ -68,7 +70,7 @@ public function index(Request $request, VehiculeRepository $vehiculeRepository):
     public function show(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
     {
         $commentaire = new Commentaires();
-        $form = $this->createForm(CommentaireType::class, $commentaire);
+        $form = $this->createForm(CommentairesType::class, $commentaire);
         $form->handleRequest($request);
     
         if ($form->isSubmitted() && $form->isValid()) {
@@ -92,6 +94,38 @@ public function index(Request $request, VehiculeRepository $vehiculeRepository):
         ]);
     }
 
+    #[Route('/{id}/image', name: 'vehicule_image_upload')]
+    public function uploadImage(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager,int $id): Response
+    {
+        $vehicule = $entityManager->getRepository(Vehicule::class)->find($id);
+    
+        if (!$vehicule) {
+            $this->addFlash('error', 'Véhicule introuvable');
+            return $this->redirectToRoute('app_vehicule_index');
+        }else {
+
+        $vehicleImage = new VehiculeImage();
+        $vehicleImage->setVehicule($vehicule);
+
+
+        $form = $this->createForm(VehiculeImageType::class, $vehicleImage);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $entityManager->persist($vehicleImage);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Image ajoutée avec succès');
+            return $this->redirectToRoute('vehicle_show', ['id' => $id]);
+        }
+
+        return $this->render('vehicle/upload_image.html.twig', [
+            'form' => $form->createView(),
+            'vehicule' => $vehicule
+        ]);
+        }
+    }
+
     #[Route('/{id}/edit', name: 'app_vehicule_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
     {
@@ -113,10 +147,13 @@ public function index(Request $request, VehiculeRepository $vehiculeRepository):
     #[Route('/{id}', name: 'app_vehicule_delete', methods: ['POST'])]
     public function delete(Request $request, Vehicule $vehicule, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$vehicule->getId(), $request->getPayload()->getString('_token'))) {
+        try {
             $entityManager->remove($vehicule);
             $entityManager->flush();
-        }
+        } catch(ForeignKeyConstraintViolationException $e) {
+            $this->addFlash('error', 'Impossible de supprimer - véhicule a des relations actives');
+            return $this->redirectToRoute('app_vehicule_index');
+        }   
 
         return $this->redirectToRoute('app_vehicule_index', [], Response::HTTP_SEE_OTHER);
     }

@@ -45,73 +45,114 @@ final class ReservationController extends AbstractController
         $reservation = new Reservation();
         $form = $this->createForm(ReservationType::class, $reservation);
         $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
+    
+        $prixTotal = 0;
+    
+        if ($form->isSubmitted()) {
             $vehicule = $reservation->getVoiture();
-
-            if (!$vehicule->isDisponibilite()) {
-                $this->addFlash('error', 'Le véhicule sélectionné n\'est pas disponible.');
-                return $this->redirectToRoute('app_reservation_new');
+    
+            if ($vehicule) {
+                $dateDebut = $reservation->getDateDebut();
+                $dateFin = $reservation->getDateFin();
+    
+                if ($dateDebut && $dateFin) {
+                    $interval = $dateDebut->diff($dateFin);
+                    $nombreJours = $interval->days;
+                    $prixTotal = $vehicule->getPrixJournalier() * $nombreJours;
+    
+                    // Vérification du prix total
+                    if ($prixTotal < 100 || $prixTotal > 500) {
+                        $this->addFlash('error', 'Le prix total de la réservation doit être compris entre 100 et 500.');
+                        return $this->redirectToRoute('app_reservation_new');
+                    }
+    
+                    // Application de la réduction de 10 % si le prix atteint 400 €
+                    if ($prixTotal >= 400) {
+                        $prixTotal = $prixTotal * 0.9;
+                    }
+    
+                    $reservation->setPrixTotal($prixTotal);
+                }
             }
-
-            $dateDebut = $reservation->getDateDebut();
-            $dateFin = $reservation->getDateFin();
-            $interval = $dateDebut->diff($dateFin);
-            $nombreJours = $interval->days;
-            $prixTotal = $vehicule->getPrixJournalier() * $nombreJours;
-            $reservation->setPrixTotal($prixTotal);
-            $reservation->setUser($this->getUser());
-            $entityManager->persist($reservation);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_reservation_index', [], Response::HTTP_SEE_OTHER);
+    
+            if ($form->isValid()) {
+                if (!$vehicule->isDisponibilite()) {
+                    $this->addFlash('error', 'Le véhicule sélectionné n\'est pas disponible.');
+                    return $this->redirectToRoute('app_reservation_new');
+                }
+    
+                $reservation->setUser($this->getUser());
+                $entityManager->persist($reservation);
+                $entityManager->flush();
+    
+                return $this->redirectToRoute('app_reservation_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
-
+    
         return $this->render('reservation/new.html.twig', [
             'reservation' => $reservation,
-            'form' => $form,
+            'form' => $form->createView(),
+            'prixTotal' => $prixTotal,
         ]);
     }
-
-    #[Route('/{id}', name: 'app_reservation_show', methods: ['GET'])]
-    public function show(Reservation $reservation): Response
-    {
-        return $this->render('reservation/show.html.twig', [
-            'reservation' => $reservation,
-        ]);
-    }
+    
+    
 
     #[Route('/{id}/edit', name: 'app_reservation_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Reservation $reservation, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(ReservationType::class, $reservation);
         $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
+    
+        $prixTotal = $reservation->getPrixTotal(); // Initialiser avec le prix actuel
+    
+        if ($form->isSubmitted()) {
             $vehicule = $reservation->getVoiture();
-
-            if (!$vehicule->isDisponibilite()) {
-                $this->addFlash('error', 'Le véhicule sélectionné n\'est pas disponible.');
-                return $this->redirectToRoute('app_reservation_edit', ['id' => $reservation->getId()]);
+    
+            if ($vehicule) {
+                $dateDebut = $reservation->getDateDebut();
+                $dateFin = $reservation->getDateFin();
+    
+                if ($dateDebut && $dateFin) {
+                    $interval = $dateDebut->diff($dateFin);
+                    $nombreJours = $interval->days;
+                    $prixTotal = $vehicule->getPrixJournalier() * $nombreJours;
+    
+                    // Vérification du prix total
+                    if ($prixTotal < 100 || $prixTotal > 500) {
+                        $this->addFlash('error', 'Le prix total de la réservation doit être compris entre 100 et 500.');
+                        return $this->redirectToRoute('app_reservation_edit', ['id' => $reservation->getId()]);
+                    }
+    
+                    // Application de la réduction de 10 % si le prix atteint 400 €
+                    if ($prixTotal >= 400) {
+                        $prixTotal = $prixTotal * 0.9;
+                    }
+    
+                    $reservation->setPrixTotal($prixTotal);
+                }
             }
-
-            $dateDebut = $reservation->getDateDebut();
-            $dateFin = $reservation->getDateFin();
-            $interval = $dateDebut->diff($dateFin);
-            $nombreJours = $interval->days;
-            $prixTotal = $vehicule->getPrixJournalier() * $nombreJours;
-            $reservation->setPrixTotal($prixTotal);
-            $reservation->setUser($this->getUser());
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_reservation_index', [], Response::HTTP_SEE_OTHER);
+    
+            if ($form->isValid()) {
+                if (!$vehicule->isDisponibilite()) {
+                    $this->addFlash('error', 'Le véhicule sélectionné n\'est pas disponible.');
+                    return $this->redirectToRoute('app_reservation_edit', ['id' => $reservation->getId()]);
+                }
+    
+                $entityManager->flush();
+    
+                return $this->redirectToRoute('app_reservation_index', [], Response::HTTP_SEE_OTHER);
+            }
         }
-
+    
         return $this->render('reservation/edit.html.twig', [
             'reservation' => $reservation,
-            'form' => $form,
+            'form' => $form->createView(),
+            'prixTotal' => $prixTotal,
         ]);
     }
+    
+    
 
     #[Route('/{id}', name: 'app_reservation_delete', methods: ['POST'])]
     public function delete(Request $request, Reservation $reservation, EntityManagerInterface $entityManager): Response

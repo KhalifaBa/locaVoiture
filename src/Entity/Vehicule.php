@@ -39,10 +39,20 @@ class Vehicule
     #[ORM\OneToMany(targetEntity: Commentaires::class, mappedBy: 'voiture')]
     private Collection $commentaires;
 
+    #[ORM\Column(length: 255)]
+    private ?string $category = null;
+
+    /**
+     * @var Collection<int, VehiculeImage>
+     */
+    #[ORM\OneToMany(targetEntity: VehiculeImage::class, mappedBy: 'vehicule')]
+    private Collection $vehiculeImages;
+
     public function __construct()
     {
         $this->reservations = new ArrayCollection();
         $this->commentaires = new ArrayCollection();
+        $this->vehiculeImages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -128,6 +138,11 @@ class Vehicule
         return $this;
     }
 
+    public function getReservationsCount(): int
+    {
+        return $this->reservations->count();
+    }
+
     /**
      * @return Collection<int, Commentaires>
      */
@@ -152,6 +167,48 @@ class Vehicule
             // set the owning side to null (unless already changed)
             if ($commentaire->getVoiture() === $this) {
                 $commentaire->setVoiture(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getCategory(): ?string
+    {
+        return $this->category;
+    }
+
+    public function setCategory(string $category): static
+    {
+        $this->category = $category;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VehiculeImage>
+     */
+    public function getVehiculeImages(): Collection
+    {
+        return $this->vehiculeImages;
+    }
+
+    public function addVehiculeImage(VehiculeImage $vehiculeImage): static
+    {
+        if (!$this->vehiculeImages->contains($vehiculeImage)) {
+            $this->vehiculeImages->add($vehiculeImage);
+            $vehiculeImage->setVehicule($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVehiculeImage(VehiculeImage $vehiculeImage): static
+    {
+        if ($this->vehiculeImages->removeElement($vehiculeImage)) {
+            // set the owning side to null (unless already changed)
+            if ($vehiculeImage->getVehicule() === $this) {
+                $vehiculeImage->setVehicule(null);
             }
         }
 

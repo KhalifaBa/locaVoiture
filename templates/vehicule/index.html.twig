@@ -33,6 +33,9 @@
                     </select>
                 </div>
             </div>
+                              {% if is_granted("ROLE_ADMIN") %}
+                            <a href="{{ path('app_vehicule_new')}}" class="btn btn-secondary btn-sm">Nouveau</a>
+            {% endif %}
             <button type="submit" class="btn btn-primary mt-3">Rechercher</button>
         </form>
 
@@ -59,8 +62,9 @@
                             <span class="star {% if item.moyenneNotes >= i %}checked{% endif %}">★</span>
                         {% endfor %}
                     </td>
+
                     <td>
-                        {% if is_granted(["ROLE_ADMIN"]) %}
+                        {% if is_granted("ROLE_ADMIN") %}
                             <a href="{{ path('app_vehicule_edit', {'id': item.vehicule.id}) }}" class="btn btn-secondary btn-sm">Edit</a>
                         {% endif %}
                         <a href="{{ path('app_vehicule_show', {'id': item.vehicule.id}) }}" class="btn btn-primary btn-sm">Show</a>
@@ -71,7 +75,10 @@
                     <td colspan="6">Pas de voitures</td>
                 </tr>
             {% endfor %}
+
+
             </tbody>
         </table>
+  
     </div>
 {% endblock %}

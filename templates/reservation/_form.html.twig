@@ -2,5 +2,10 @@
     <div class="form-group">
         {{ form_widget(form) }}
     </div>
+    {% if prixTotal %}
+            <div id="prixTotalDisplay">Prix total : <b>{{prixTotal}}</b> €</div>
+    {% endif %}
+
+
     <button type="submit" class="btn btn-primary">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}
