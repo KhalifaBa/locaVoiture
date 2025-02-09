@@ -103,6 +103,13 @@ class Vehicule
 
     public function setDisponibilite(bool $disponibilite): static
     {
+        foreach ($this->getReservations() as $reservation) {
+            $now = new \DateTime();
+            if ($reservation->getDateFin() > $now) {
+                throw new \Exception('Le statut "indisponible" ne peut pas être modifié tant que la date de fin de la réservation n\'est pas atteinte.');
+            }
+        }
+    
         $this->disponibilite = $disponibilite;
 
         return $this;

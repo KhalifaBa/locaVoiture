@@ -101,10 +101,17 @@ final class ReservationController extends AbstractController
     #[Route('/{id}/edit', name: 'app_reservation_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Reservation $reservation, EntityManagerInterface $entityManager): Response
     {
+   
+        $now = new \DateTime();
+        if ($reservation->getDateFin() > $now) {
+            $this->addFlash('error', 'Le statut "indisponible" ne peut pas être modifié tant que la date de fin de la réservation n\'est pas atteinte.');
+            return $this->redirectToRoute('app_reservation_edit', ['id' => $reservation->getId()]);
+        }
+    
         $form = $this->createForm(ReservationType::class, $reservation);
         $form->handleRequest($request);
     
-        $prixTotal = $reservation->getPrixTotal(); // Initialiser avec le prix actuel
+        $prixTotal = $reservation->getPrixTotal(); 
     
         if ($form->isSubmitted()) {
             $vehicule = $reservation->getVoiture();
@@ -118,13 +125,13 @@ final class ReservationController extends AbstractController
                     $nombreJours = $interval->days;
                     $prixTotal = $vehicule->getPrixJournalier() * $nombreJours;
     
-                    // Vérification du prix total
+
                     if ($prixTotal < 100 || $prixTotal > 500) {
                         $this->addFlash('error', 'Le prix total de la réservation doit être compris entre 100 et 500.');
                         return $this->redirectToRoute('app_reservation_edit', ['id' => $reservation->getId()]);
                     }
     
-                    // Application de la réduction de 10 % si le prix atteint 400 €
+    
                     if ($prixTotal >= 400) {
                         $prixTotal = $prixTotal * 0.9;
                     }
@@ -151,6 +158,7 @@ final class ReservationController extends AbstractController
             'prixTotal' => $prixTotal,
         ]);
     }
+    
     
     
 
